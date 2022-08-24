@@ -60,9 +60,27 @@ impl Kanata {
                             };
                             KeyEvent { code, value }
                         }
-                        _ => {
-                            intrcptn.send(dev, &strokes[i..i + 1]);
-                            continue;
+                        ic::Stroke::Mouse { state, .. } => {
+                            let mut hwid = [0u8; 128];
+                            const LENOVO_BTN_HWID: [u8; 128] = [65, 0, 67, 0, 80, 0, 73, 0, 92, 0, 86, 0, 69, 0, 78, 0, 95, 0, 76, 0, 69, 0, 78, 0, 38, 0, 68, 0, 69, 0, 86, 0, 95, 0, 48, 0, 48, 0, 56, 0, 70, 0, 0, 0, 65, 0, 67, 0, 80, 0, 73, 0, 92, 0, 76, 0, 69, 0, 78, 0, 48, 0, 48, 0, 56, 0, 70, 0, 0, 0, 42, 0, 76, 0, 69, 0, 78, 0, 48, 0, 48, 0, 56, 0, 70, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+                            if state.contains(ic::MouseState::RIGHT_BUTTON_DOWN) {
+                                intrcptn.get_hardware_id(dev, &mut hwid);
+                                if hwid != LENOVO_BTN_HWID {
+                                    intrcptn.send(dev, &strokes[i..i + 1]);
+                                    continue;
+                                }
+                                KeyEvent { code: OsCode::KEY_F13, value: KeyValue::Press }
+                            } else if state.contains(ic::MouseState::RIGHT_BUTTON_UP) {
+                                intrcptn.get_hardware_id(dev, &mut hwid);
+                                if hwid != LENOVO_BTN_HWID {
+                                    intrcptn.send(dev, &strokes[i..i + 1]);
+                                    continue;
+                                }
+                                KeyEvent { code: OsCode::KEY_F13, value: KeyValue::Press }
+                            } else {
+                                intrcptn.send(dev, &strokes[i..i + 1]);
+                                continue;
+                            }
                         }
                     };
                     log::debug!("sending {key_event:?} to processing loop");
