@@ -18,6 +18,10 @@ impl Kanata {
             ic::is_keyboard,
             ic::Filter::KeyFilter(ic::KeyFilter::UP | ic::KeyFilter::DOWN),
         );
+        intrcptn.set_filter(
+            ic::is_mouse,
+            ic::Filter::MouseFilter(ic::MouseState::all()),
+        );
         let mut strokes = [ic::Stroke::Keyboard {
             code: ic::ScanCode::Esc,
             state: ic::KeyState::empty(),
@@ -27,6 +31,7 @@ impl Kanata {
         loop {
             let dev = intrcptn.wait_with_timeout(std::time::Duration::from_millis(1));
             if dev > 0 {
+                log::debug!("dev {dev:?}");
                 let num_strokes = intrcptn.receive(dev, &mut strokes);
                 let num_strokes = num_strokes as usize;
 
